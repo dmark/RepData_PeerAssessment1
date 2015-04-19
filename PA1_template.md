@@ -2,21 +2,51 @@
 title: "Reproducible Research :: Peer Assessment 1"
 author: "Mark E. Drummond"
 date: '2015-04-18'
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: readable
 ---
 
-## Loading and preprocessing the data
+## Non-Core R Package Dependancies
 
-Show any code that is needed to
-
-1. Load the data (i.e. read.csv())
-
-Assumes the data file is named "activity.csv" and is in the same directory where
-this script is running.
+* knitr 1.9
+* ggplot2 1.0.1
 
 
 ```r
-activity <- read.csv("./activity.csv", colClasses = c("integer", "Date", "integer"))
+library(ggplot2)
+```
+
+## Using this Document
+
+This document `PA1_template.Rmd` can be processed from any
+[R](http://cran.utstat.utoronto.ca/) console using the
+[knitr](http://yihui.name/knitr/) package, provided you have the data file
+[`activity.csv`](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)
+in the same directory where this file is located. From the R console, load the
+`knitr` package and process the file as follows:
+
+    > library(knitr)
+    > knit2html("./PA1_template.Rmd")
+
+## Charting Notes
+
+The charts in this document were originally plotted using R's native plotting
+functions. Some of the plots have subsequently been converted to ggplot2 simply
+as an exercise in using ggplot2.
+
+## Loading and Preprocessing the Data
+
+Show any code that is needed to:
+
+1. Load the data.
+
+
+```r
+activity <- read.csv("./activity.csv", 
+                     colClasses = c("integer", "Date", "integer"))
 str(activity)
 ```
 
@@ -42,7 +72,7 @@ head(activity)
 ```
 
 2. Process/transform the data (if necessary) into a format suitable for your
-analysis
+analysis.
 
 
 ```r
@@ -52,15 +82,9 @@ analysis
 ## What is mean total number of steps taken per day?
 
 For this part of the assignment, you can ignore the missing values in the
-dataset**.
+dataset.
 
-**Note: for this part of the assignment we are told we can "ignore the missing
-values in the dataset". It is not clear whether this means to ignore just the
-specific NA values or whether we can ignore any observations with 1 or more NA
-values. For my work below, I chose to ignore the individual NA values, not
-entore observations.
-
-1. Calculate the total number of steps taken per day
+1. Calculate the total number of steps taken per day.
 
 
 ```r
@@ -73,19 +97,26 @@ head(steps_per_day)
 ##          0        126      11352      12116      13294      15420
 ```
 
-2. Make a histogram of the total number of steps taken each day
+2. Make a histogram of the total number of steps taken each day.
 
 
 ```r
-hist(steps_per_day, breaks = 20, main = "Steps per Day", xlab = "Steps per Day", col = "lightgreen")
+hist(steps_per_day, 
+     breaks = 20, 
+     main = "Steps per Day", 
+     xlab = "steps", 
+     ylab = "days",
+     col = "lightgreen")
 ```
 
-![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
 
 3. Calculate and report the mean and median of the total number of steps taken
-per day
+per day.
 
-I assume the desired outcome here is not the daily mean and median (two values *per day*) but rather the mean and median values across all days (two values *in total*).
+I assume the desired outcome here is not the daily mean and median per day (two
+values *per day*) but rather the mean and median values across all days, where
+the days have been aggragated as in step 1 above (two values *in total*).
 
 
 ```r
@@ -111,7 +142,10 @@ and the average number of steps taken, averaged across all days (y-axis)
 
 
 ```r
-mean_steps_by_interval <- tapply(activity$steps, activity$interval, mean, na.rm = T)
+mean_steps_by_interval <- tapply(activity$steps, 
+                                 activity$interval, 
+                                 mean, 
+                                 na.rm = T)
 head(mean_steps_by_interval)
 ```
 
@@ -121,15 +155,26 @@ head(mean_steps_by_interval)
 ```
 
 ```r
+summary(mean_steps_by_interval)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   2.486  34.110  37.380  52.830 206.200
+```
+
+```r
 plot(mean_steps_by_interval,
      type = "l",
      main = "Average Steps per Day by Interval",
      xaxt = "n",
-     xlab = "Interval", ylab = "Avg. Steps")
-axis(1, at = 1:length(mean_steps_by_interval), labels = names(mean_steps_by_interval))
+     xlab = "interval", ylab = "average steps")
+axis(1, 
+     at = 1:length(mean_steps_by_interval), 
+     labels = names(mean_steps_by_interval))
 ```
 
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
 
 2. Which 5-minute interval, on average across all the days in the dataset,
 contains the maximum number of steps?
@@ -143,6 +188,8 @@ mean_steps_by_interval[which.max(mean_steps_by_interval)]
 ##      835 
 ## 206.1698
 ```
+
+Interval 835 (08:35 AM) has the highest average number of steps.
 
 ## Imputing missing values
 
@@ -162,6 +209,8 @@ nrow(activity[is.na(activity$steps)==T, ])
 ## [1] 2304
 ```
 
+There are 2,304 missing values.
+
 2. Devise a strategy for filling in all of the missing values in the dataset.
 The strategy does not need to be sophisticated. For example, you could use the
 mean/median for that day, or the mean for that 5-minute interval, etc.
@@ -175,7 +224,10 @@ missing data filled in.
 ```r
 activity_imputed <- activity
 
-mean_steps_by_interval_imputed <- tapply(activity_imputed$steps, activity_imputed$interval, mean, na.rm = T)
+mean_steps_by_interval_imputed <- tapply(activity_imputed$steps, 
+                                         activity_imputed$interval, 
+                                         mean, 
+                                         na.rm = T)
 
 na_replace <- function (interval) {
   return(mean_steps_by_interval_imputed[as.character(interval)])
@@ -207,7 +259,10 @@ of steps?
 
 
 ```r
-steps_per_day_imputed <- tapply(activity_imputed$steps, activity_imputed$date, sum, na.rm = T)
+steps_per_day_imputed <- tapply(activity_imputed$steps, 
+                                activity_imputed$date, 
+                                sum, 
+                                na.rm = T)
 head(steps_per_day_imputed)
 ```
 
@@ -217,10 +272,15 @@ head(steps_per_day_imputed)
 ```
 
 ```r
-hist(steps_per_day_imputed, breaks = 20, main = "Steps per Day (imputed NAs)", xlab = "Steps per Day", col = "lightgreen")
+hist(steps_per_day_imputed, 
+     breaks = 20, 
+     main = "Steps per Day (imputed NAs)", 
+     xlab = "steps", 
+     ylab = "days",
+     col = "lightgreen")
 ```
 
-![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
 
 ```r
 mean(steps_per_day_imputed)
@@ -238,9 +298,9 @@ median(steps_per_day_imputed)
 ## [1] 10766.19
 ```
 
-The NAs were previously skewing the histogram, being classified into the [0, 1000]
-bin. The mean and median are now equal to each other and greater than the previous
-values.
+The NAs were previously skewing the histogram, being classified into the [0,
+1000] bin. The mean and median are now equal to each other and greater than the
+previous values.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
@@ -274,11 +334,8 @@ across all weekday days or weekend days (y-axis). See the README file in the
 GitHub repository to see an example of what this plot should look like using
 simulated data.
 
-The following is a simple exercise in using ggplot2 for graphics.
-
 
 ```r
-library(ggplot2)
 d <- aggregate(steps ~ weekend_or_weekday + interval, activity_imputed, mean)
 g <- ggplot(d, aes(interval, steps))
 g + geom_line(col = "blue") + 
@@ -289,7 +346,9 @@ g + geom_line(col = "blue") +
   theme(strip.background = element_rect(fill = "lightgreen"))
 ```
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png) 
 
-The charts indicate that, during the working week, there is a surge in walking activity in the
-morning, while on the weekend walking activity is more evenly spread out throughout the day.
+The charts indicate that, during the working week, there is a surge in walking
+activity in the morning, while on the weekend walking activity is more evenly
+spread out throughout the day.
+
